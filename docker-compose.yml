@@ -1,0 +1,22 @@
+name: ogv
+services:
+    ogv:
+        # Apple Silicon
+        platform: linux/amd64
+        # Windows
+        #platform: darwin/amd64
+        #Linux AMD
+        #platform: linux/amd64
+        #Linux ARM
+        #platform: linux/arm64
+        build:
+            context: .
+            dockerfile: Dockerfile
+        stdin_open: true
+        tty: true
+        ports:
+            - 8180:8180
+        container_name: ogv
+        volumes:
+            - '.:/home/node/app'
+        image: ogv

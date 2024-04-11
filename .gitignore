@@ -1,0 +1,4 @@
+/jobs
+.snakemake
+/input
+errors.log

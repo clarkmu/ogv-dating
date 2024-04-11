@@ -28,7 +28,7 @@ The linear regression molecular clock method, essentially the same as in [the Jo
 
 <p>
 
-## Implementation 
+## Implementation
 
 ### Dependancies
 
@@ -38,13 +38,13 @@ The linear regression molecular clock method, essentially the same as in [the Jo
 4. `phylotree.js` (an `npm` package) for tree processing and visualization [note; there is a custom JS script for performing dating steps that is included in `scripts`]
 5. `snakemake` for workflow management
 6. `node` for executing JavaScript
-7. `BioPython` 
+7. `BioPython`
 
-See notes on configuration below and please run 
+See notes on configuration below and please run
 ```
-npm install 
+npm install
 ```
-from the base directory 
+from the base directory
 
 
 #### Workflow
@@ -53,7 +53,7 @@ The workflow for sample classification is implemented as a [Snakemake](https://s
 
 ![img1](img/3.png)
 
-The pipeline requires an input `samples.json` file, with pathnames of files to process specified relative to the `data` directory, e.g. 
+The pipeline requires an input `samples.json` file, with pathnames of files to process specified relative to the `data` directory, e.g.
 
 ```
 {
@@ -73,13 +73,13 @@ The pipeline requires an input `samples.json` file, with pathnames of files to p
         "CAP257/CAP257_ENV_4_all_hap.fasta",
 ```
 
-The pipeline is executed by calling `snakemake`, e.g. 
+The pipeline is executed by calling `snakemake`, e.g.
 
 ```
-$snakemake --cores 4 
+$snakemake --cores 4
 ```
 
-After the pipeline has completed, you need to run 
+After the pipeline has completed, you need to run
 
 ```
 $python3 scripts/result-summary.py -d results/dating/ -j data/conversion.json -o results/summary.csv
@@ -127,7 +127,7 @@ The high level directory structure contains the following components
 └── scripts
     ├── compute-distance.js 	[Classifier/timing script]
     └── result-summary.py		[Penultimate summary script]
-```    
+```
 
 
 Within specific resutls directories, the following files are created **for each input FASTA**
@@ -135,7 +135,7 @@ Within specific resutls directories, the following files are created **for each 
 #### `alignments` directory
 ```
 CAP316/
-├── CAP316_ENV_3_all_hap.fasta_combined.msa           
+├── CAP316_ENV_3_all_hap.fasta_combined.msa
     [RNA+QVOA nucleotide in-frame sequences, aligned]
 ├── CAP316_ENV_3_all_hap.fasta_combined_nuc.fas
     [RNA+QVOA nucleotide in-frame sequences, not aligned]
@@ -223,3 +223,36 @@ callables = {
     'classifier' : 'scripts/compute-distance.js'
 }
 ```
+
+
+## Running
+
+### Install
+
+Setup requires the Docker App.  Please see [this link]("https://www.docker.com/products/docker-desktop/") for download or search "Docker Download".
+
+If you are using Windows or Linux, edit `docker-compose.yml` to match your OS.  Comment out the Apple Silicon platform and uncomment the line that matches your OS.
+
+Run the following command at this directory:
+
+`docker-compose up -d`
+
+### CLI access
+
+Run the following command at this directory:
+
+`docker exec -it ogv bash`
+
+### Running
+
+Place .fasta files in a folder in this directory (ex: ./input) then run the following command at this directory.  Point the -in flag to your input and -out to where you want output to be generated.
+
+`python3 init_pipeline.py -in /home/node/app/input -out /home/node/app/jobs/subject_1`
+
+You will be prompted to enter the Post Weeks Infection per subject.
+
+### Shut down container
+
+Run the following command at this directory:
+
+`docker-compose down`
