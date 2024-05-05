@@ -11,11 +11,11 @@
     "node": ">=12"
   },
   "dependencies": {
-    "phylotree" : "1.0.0-alpha.21",
-    "fast-csv" : "<3.0",
-    "commander" : "=6.0",
-    "d3" : "<4.0",
-    "seedrandom" : ""
+    "phylotree": "1.0.0-alpha.21",
+    "fast-csv": "<3.0",
+    "commander": "=6.0",
+    "d3": "<4.0",
+    "seedrandom": ""
   },
   "keywords": [],
   "author": "",

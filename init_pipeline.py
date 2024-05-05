@@ -78,7 +78,7 @@ with open(f"{output_dir}samples.json", 'w') as fp:
 print(f"Running pipeline...job_dir='{output_dir}'")
 
 pipeline_result = subprocess.run(
-    f"snakemake --keep-incomplete --keep-going --cores 4 --configfile {output_dir}samples.json",
+    f"snakemake --keep-incomplete --cores 4 --configfile {output_dir}samples.json",
     shell=True,
     # capture_output = True
 )
@@ -89,5 +89,9 @@ if(pipeline_result.returncode != 0):
     # print(pipeline_result.stderr)
     exit(1)
 
-# print("Running result summary...")
-# subprocess.run(f"$python3 /home/node/app/scripts/result-summary.py -d {output_dir}results/dating/ -j {output_dir}conversion.json -o {output_dir}results/summary.csv")
+print("Running result summary...")
+subprocess.run(f"python3 /home/node/app/scripts/result-summary.py -d {output_dir}results/dating/ -j {output_dir}conversion.json -o {output_dir}results/summary.csv")
+
+print("Done!")
+with open(f"{output_dir}.done", "w+") as f:
+    f.write("done")

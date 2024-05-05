@@ -2,3 +2,4 @@
 .snakemake
 /input
 errors.log
+node_modules

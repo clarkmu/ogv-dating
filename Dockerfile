@@ -6,8 +6,7 @@ ARG PATH="/root/miniconda3/bin:${PATH}"
 ENV PORT=8180
 
 RUN apt update && apt upgrade -y
-RUN apt install software-properties-common wget curl libcurl4 -y
-RUN apt install vim -y
+RUN apt install software-properties-common wget curl libcurl4 vim -y
 
 # Anaconda (MiniConda) https://docs.conda.io/projects/conda/en/latest/user-guide/install/macos.html
 RUN wget \
@@ -41,10 +40,13 @@ RUN conda install mamba
 RUN conda install python=3.9
 RUN conda install snakemake
 RUN conda install raxml-ng
-RUN conda install fasttree
-RUN conda install bioconda:hyphy==2.5.60
-RUN conda install mafft=7.508
-RUN mamba install nodejs
+RUN conda install bioconda:hyphy==2.5.61
+RUN conda install mafft==7.508
+RUN mamba install nodejs==12.4.0
+
+# Conda installs FastTree Double-Precision
+# Use this version for unique branch lengths
+COPY ./FastTree /usr/bin/FastTree
 
 # result-summary.py dependency
 RUN pip3 install biopython
@@ -57,10 +59,12 @@ RUN npm install
 EXPOSE $PORT
 
 # BUILD HYPHY DEVELOPMENT BRANCH
-#apt install git build-essential
-#conda install cmake=3.12.2
-#https://github.com/veg/hyphy /home/node/hyphy -b development
+#add-apt-repository ppa:ubuntu-toolchain-r/test -y
+#apt update
+#apt install git build-essential gcc-12 g++-12 -y
+#mamba install cmake=3.12.2
+# CC=/path/to/gcc/12.2.0/bin/gcc CXX=/path/to/gcc/12.2.0/bin/g++ cmake ./
+#git clone https://github.com/veg/hyphy /home/node/hyphy -b development
 # cd /home/node/hyphy && cmake . && make -j MP
-
 
 CMD sleep infinity
