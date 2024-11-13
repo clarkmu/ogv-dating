@@ -15,28 +15,45 @@ callables = {
     'classifier' : 'scripts/compute-distance.js'
 }
 
+if config and config['job_dir'] and len(config['job_dir']) > 0:
+    job_dir = config['job_dir']
+
+    INPUT_DIR           = f"{job_dir}data"
+    ALIGNMENT_DIR       = f"{job_dir}results/alignments"
+    TREE_DIR            = f"{job_dir}results/trees"
+    CALLS_DIR           = f"{job_dir}results/dating"
+
+    callables = {
+        'hyphy' : 'hyphy',
+        'mafft' : 'mafft --auto ',
+        'raxml' : 'raxml-ng',
+        'fasttree' : 'FastTree',
+        'classifier' : 'scripts/compute-distance.js'
+    }
+else:
+    configfile: "samples.json"
+
+print(config)
 
 wildcard_constraints:
     subject="\w+"
-    
+
 for d in [INPUT_DIR, ALIGNMENT_DIR, TREE_DIR, CALLS_DIR]:
     if not os.path.isdir (d):
         os.makedirs (d)
-  
-configfile: "samples.json"
-        
+
 def ensure_all_directories_exist ():
-    IDS,SAMPLES = glob_wildcards("data/{id}/{sample}.fasta")
+    IDS,SAMPLES = glob_wildcards(INPUT_DIR + "/{id}/{sample}.fasta")
     for id in set (IDS):
         for d in [ALIGNMENT_DIR, TREE_DIR, CALLS_DIR]:
             os.makedirs ("%s/%s" % (d,id), exist_ok=True)
     inputs = expand("%s/{sample}_{extension}" % CALLS_DIR, sample=config["samples"], extension = TREES)
     return inputs
-    
+
 rule all:
     input:
-        ensure_all_directories_exist ()    
-  
+        ensure_all_directories_exist ()
+
 
 rule read_qc:
     threads: 1
@@ -51,7 +68,7 @@ rule read_qc:
         qvoa = "%s/{subject}/{sample}_qvoa.fas" % ALIGNMENT_DIR
     shell:
         "%s HBL/data_filter.bf --input {input} --qvoa {output.qvoa} --protein {output.protein} --rna {output.nuc_data} --combined-rna {output.combined_nuc} --combined-protein {output.combined_protein}" % callables['hyphy']
-        
+
 rule make_protein_msa_rna:
     threads: 1
     input:
@@ -59,15 +76,15 @@ rule make_protein_msa_rna:
     output:
         "%s/{subject}/{tag}_rna_protein.msa" % ALIGNMENT_DIR
     shell:
-        "%s {input} > {output} 2>/dev/null" % callables['mafft']     
-  
+        "%s {input} > {output} 2>/dev/null" % callables['mafft']
+
 rule make_protein_msa_combined:
     input:
         "%s/{subject}/{sample}_combined_protein.fas" % ALIGNMENT_DIR
     output:
         "%s/{subject}/{sample}_combined_protein.msa" % ALIGNMENT_DIR
     shell:
-        "%s {input} > {output} 2>/dev/null" % callables['mafft']    
+        "%s {input} > {output} 2>/dev/null" % callables['mafft']
 
 rule make_codon_msa_rna:
     threads: 1
@@ -95,11 +112,11 @@ rule infer_ml_rna_tree:
         "%s/{subject}/{sample}_rna.msa" % ALIGNMENT_DIR,
     output:
         "%s/{subject}/{sample}_rna_unscaled.nwk" % TREE_DIR
-    shadow: 
+    shadow:
         "shallow"
     shell:
         #"%s --msa {input} --force --model GTR --tree pars ; mv {input}.raxml.bestTree {output} " % callables['raxml']
-        "%s -nt -gtr < {input} > {output}" % callables ["fasttree"]
+        "%s -nt -gtr -gamma -slow < {input} > {output}" % callables ["fasttree"]
 
 rule infer_ml_rna_tree_lengths:
     input:
@@ -107,7 +124,7 @@ rule infer_ml_rna_tree_lengths:
         tree = "%s/{subject}/{sample}_rna_unscaled.nwk" % TREE_DIR
     output:
         "%s/{subject}/{sample}_rna.nwk" % TREE_DIR
-    shadow: 
+    shadow:
         "shallow"
     shell:
         "%s HBL/branch-lengths.bf {input.msa} {input.tree} {output}" % callables['hyphy']
@@ -119,7 +136,7 @@ rule infer_ml_tree:
         "%s/{subject}/{sample}_combined.msa" % ALIGNMENT_DIR,
     output:
         "%s/{subject}/{sample}_combined_unscaled.nwk" % TREE_DIR
-    shadow: 
+    shadow:
         "shallow"
     shell:
         "%s -nt -gtr < {input} > {output}" % callables ["fasttree"]
@@ -131,7 +148,7 @@ rule infer_ml_tree_lengths:
         tree = "%s/{subject}/{sample}_combined_unscaled.nwk" % TREE_DIR
     output:
         "%s/{subject}/{sample}_combined.nwk" % TREE_DIR
-    shadow: 
+    shadow:
         "shallow"
     shell:
         "%s HBL/branch-lengths.bf {input.msa} {input.tree} {output}" % callables['hyphy']
@@ -146,16 +163,14 @@ rule perform_placement:
         "%s/{subject}/{sample}_placement.tsv" % CALLS_DIR,
         "%s/{subject}/{sample}_full_placement.tsv" % CALLS_DIR
     shell:
-        "cat {input} > %s/{wildcards.subject}/{wildcards.sample}.scueal; %s HBL/scripts/screen_fasta.bf %s/{wildcards.subject}/{wildcards.sample}.scueal %s/{wildcards.subject}/{wildcards.sample}_qvoa.fas {output}" % (CALLS_DIR, callables['hyphy'], CALLS_DIR, ALIGNMENT_DIR  )  
-        
+        "cat {input} > %s/{wildcards.subject}/{wildcards.sample}.scueal; %s HBL/scripts/screen_fasta.bf %s/{wildcards.subject}/{wildcards.sample}.scueal %s/{wildcards.subject}/{wildcards.sample}_qvoa.fas {output}" % (CALLS_DIR, callables['hyphy'], CALLS_DIR, ALIGNMENT_DIR  )
+
 rule perform_classification:
     threads: 1
     input:
         newick = "%s/{subject}/{sample}_combined.nwk" % TREE_DIR,
         placement = "%s/{subject}/{sample}_full_placement.tsv" % CALLS_DIR
-    output:        
+    output:
         "%s/{subject}/{sample}_classification.csv" % CALLS_DIR
     shell:
-        "%s -n {input.newick} -r 'OGV,QVOA|OGV|DNA' RNA,NGS -f RNA -p  {input.placement} > {output} " % callables['classifier']    
-   
-
+        "%s -n {input.newick} -r 'OGV,QVOA|OGV|DNA' RNA,NGS -f RNA -p  {input.placement} > {output} " % callables['classifier']
