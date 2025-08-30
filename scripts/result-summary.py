@@ -47,7 +47,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
 
-    prefix_extractor = re.compile ('^([^_]+)_([^_]+_[^_]+)(.+)fa(.*)_classification')
+    # prefix_extractor = re.compile ('^([^_]+)_([^_]+_[^_]+)(.+)fa(.*)_classification')
+    prefix_extractor = re.compile(r'^([^_]+)_([^.]+)\.fasta_classification$')
     has_counts = args.counts
 
     summary = {}

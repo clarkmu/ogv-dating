@@ -3,3 +3,6 @@
 /input
 errors.log
 node_modules
+
+.DS_STORE
+/*.csv
